@@ -1,5 +1,3 @@
-import React from 'react';
-import MainLayout from '../../components/layout/MainLayout';
 import WelcomeHeader from './components/WelcomeHeader';
 import StatsGrid from './components/StatsGrid';
 import UpcomingInterviews from './components/UpcomingInterviews';
@@ -9,7 +7,6 @@ import RecentActivity from './components/RecentActivity';
 
 const Dashboard = () => {
   return (
-    <MainLayout>
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader />
         <StatsGrid />
@@ -23,7 +20,6 @@ const Dashboard = () => {
             </div>
         </div>
       </div>
-    </MainLayout>
   );
 };
 

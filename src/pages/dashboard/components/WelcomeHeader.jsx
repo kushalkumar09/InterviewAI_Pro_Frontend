@@ -10,7 +10,7 @@ const WelcomeHeader = () => {
                     <span className="text-4xl">🚀</span>
                 </div>
                 <p className="text-purple-100 text-lg mb-8 font-light">
-                    Ready to crush your next interview at Google?
+                    Ready to crush your next interview at Your dream company?
                 </p>
 
                 <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl mb-8 border border-white/20">
