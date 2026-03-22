@@ -8,6 +8,8 @@ import ProtectedRoute from './components/common/ProtectedRoutes';
 import MainLayout from './components/layout/MainLayout';
 import InterviewReport from './pages/report/Report';
 import ReportsList from './pages/report/ReportHistory';
+import Achievements from './pages/achievement/Achievement';
+import Settings from './pages/setting/Setting';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/create-interview" element={<InterviewSetup />} />
         <Route path="/reports" element={<ReportsList />} />
         <Route path="/reports/:id" element={<InterviewReport />} />
+        <Route path="/achievements" element={<Achievements />} />
+        <Route path="/settings" element={<Settings />} /> 
       </Route>
 
       {/* CASE 2: Protected pages WITHOUT Sidebar/Header */}
