@@ -6,6 +6,8 @@ import Login from './pages/authentication/Login';
 import Signup from './pages/authentication/Signup';
 import ProtectedRoute from './components/common/ProtectedRoutes';
 import MainLayout from './components/layout/MainLayout';
+import InterviewReport from './pages/report/Report';
+import ReportsList from './pages/report/ReportHistory';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/create-interview" element={<InterviewSetup />} />
+        <Route path="/reports" element={<ReportsList />} />
+        <Route path="/reports/:id" element={<InterviewReport />} />
       </Route>
 
       {/* CASE 2: Protected pages WITHOUT Sidebar/Header */}
