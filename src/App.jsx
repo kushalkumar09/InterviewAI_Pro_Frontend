@@ -10,6 +10,7 @@ import InterviewReport from './pages/report/Report';
 import ReportsList from './pages/report/ReportHistory';
 import Achievements from './pages/achievement/Achievement';
 import Settings from './pages/setting/Setting';
+import PreInterviewChecks from './pages/preInterviewChecks/PreInterviewChecks';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
       </Route>
 
       {/* CASE 2: Protected pages WITHOUT Sidebar/Header */}
+      <Route path="/interview-checks" element={<PreInterviewChecks />} />
       {/* Example: A full-screen Live Interview Room or a Video Call */}
       {/* <Route path="/live-interview/:id" element={<LiveInterviewRoom />} /> */}
       {/* <Route path="/settings/security" element={<DeepSecuritySettings />} /> */}

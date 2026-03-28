@@ -12,6 +12,7 @@ import {
   Brain,
   Zap
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const InterviewSetup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,6 +35,11 @@ const InterviewSetup = () => {
         ? prev.focusAreas.filter(a => a !== area)
         : [...prev.focusAreas, area]
     }));
+  };
+  const navigateTo = useNavigate();
+
+  const navigateToInterviewChecks = () => {
+    navigateTo('/interview-checks');
   };
 
   const steps = [
@@ -145,7 +151,7 @@ const InterviewSetup = () => {
         <p className="flex items-center justify-center gap-2 text-sm"><Brain size={16} /> Difficulty: <span className="font-bold text-slate-800">{formData.difficulty}</span></p>
       </div>
       <div className="flex flex-col gap-3 max-w-xs mx-auto pt-4 w-full">
-        <button className="bg-[#0f172a] text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-purple-600 transition-all active:scale-95 uppercase tracking-widest text-[10px]">
+        <button className="bg-[#0f172a] text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-purple-600 transition-all active:scale-95 uppercase tracking-widest text-[10px]" onClick={navigateToInterviewChecks}>
           Start AI Session
         </button>
         <button className="text-slate-400 text-[10px] font-bold hover:text-slate-600 uppercase tracking-widest py-2">
