@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   User, Sliders, CreditCard, Bell, 
   Camera, Shield, LogOut, CheckCircle2,
   Zap, Volume2, Globe
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../config/api/api';
 
 // Mini Toggle Component for the UI
 const Toggle = ({ enabled, onChange }) => (
@@ -23,15 +25,15 @@ const Toggle = ({ enabled, onChange }) => (
 );
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
-  
-  // Mock State for Form Data
+
   const [profileData, setProfileData] = useState({
-    firstName: 'Alex',
-    lastName: 'Chen',
-    email: 'alex.chen@example.com',
-    targetRole: 'Senior Frontend Engineer',
-    experience: '5-7 Years',
+    firstName: '',
+    lastName: '',
+    email: '',
+    targetRole: '',
+    experience: '',
   });
 
   const [preferences, setPreferences] = useState({
@@ -46,6 +48,79 @@ const Settings = () => {
     streakReminders: true,
     marketingEmails: false,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const applyUserSettings = (user) => {
+    setProfileData({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      targetRole: user.targetRole || '',
+      experience: user.experience || '',
+    });
+    setPreferences({
+      strictMode: user.preferences?.strictMode ?? true,
+      aiVoice: user.preferences?.aiVoice || 'Nova (Female, Professional)',
+      language: user.preferences?.language || 'English (US)',
+      playbackSpeed: user.preferences?.playbackSpeed || 'Normal (1.0x)',
+    });
+    setNotifications({
+      emailSummaries: user.notifications?.emailSummaries ?? true,
+      streakReminders: user.notifications?.streakReminders ?? true,
+      marketingEmails: user.notifications?.marketingEmails ?? false,
+    });
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    api.get('/user/settings')
+      .then(({ data }) => {
+        if (!isMounted) return;
+        applyUserSettings(data.user);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setError(err.response?.data?.message || 'Unable to load settings');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSave = async () => {
+    setError('');
+    setSuccess('');
+    setIsSaving(true);
+
+    try {
+      const { data } = await api.put('/user/settings', {
+        profileData,
+        preferences,
+        notifications,
+      });
+      applyUserSettings(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setSuccess('Settings saved');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to save settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
     <>
@@ -57,8 +132,12 @@ const Settings = () => {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
             <p className="text-slate-400 text-sm font-medium">Manage your account, AI preferences, and billing.</p>
           </div>
-          <button className="bg-[#0f172a] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-600 transition-all shadow-lg active:scale-95">
-            Save Changes
+          <button
+            onClick={handleSave}
+            disabled={isLoading || isSaving}
+            className="bg-[#0f172a] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-600 transition-all shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
@@ -88,6 +167,23 @@ const Settings = () => {
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto p-10 space-y-10 animate-in fade-in duration-300">
+            {isLoading && (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-sm font-bold text-slate-500">
+                Loading settings...
+              </div>
+            )}
+
+            {!isLoading && error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5 text-sm font-bold text-rose-600">
+                {error}
+              </div>
+            )}
+
+            {!isLoading && success && (
+              <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-sm font-bold text-emerald-700">
+                <CheckCircle2 size={18} /> {success}
+              </div>
+            )}
             
             {/* PROFILE TAB */}
             {activeTab === 'profile' && (
@@ -96,7 +192,7 @@ const Settings = () => {
                 <div className="flex items-center gap-6">
                   <div className="relative group cursor-pointer">
                     <div className="w-24 h-24 bg-purple-100 text-purple-600 rounded-[2rem] flex items-center justify-center text-3xl font-black border-4 border-white shadow-md group-hover:bg-purple-200 transition-colors">
-                      {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
+                      {(profileData.firstName.charAt(0) || 'U')}{profileData.lastName.charAt(0)}
                     </div>
                     <div className="absolute bottom-0 right-0 p-2 bg-[#0f172a] text-white rounded-xl shadow-lg border-2 border-white group-hover:scale-110 transition-transform">
                       <Camera size={14} />
@@ -175,6 +271,15 @@ const Settings = () => {
                       <option>English (UK)</option>
                       <option>Spanish</option>
                       <option>French</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Playback Speed</label>
+                    <select value={preferences.playbackSpeed} onChange={(e) => setPreferences({...preferences, playbackSpeed: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-900 focus:bg-white focus:border-purple-400 outline-none transition-all appearance-none cursor-pointer">
+                      <option>Slow (0.75x)</option>
+                      <option>Normal (1.0x)</option>
+                      <option>Fast (1.25x)</option>
+                      <option>Very Fast (1.5x)</option>
                     </select>
                   </div>
                 </div>
@@ -258,8 +363,8 @@ const Settings = () => {
                       <h4 className="font-bold text-rose-900 text-sm">Delete Account</h4>
                       <p className="text-xs text-rose-700 font-medium mt-1">Permanently delete your account and all interview history.</p>
                     </div>
-                    <button className="px-6 py-3 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm">
-                      Delete Data
+                    <button onClick={handleLogout} className="px-6 py-3 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm inline-flex items-center gap-2">
+                      <LogOut size={14} /> Sign Out
                     </button>
                   </div>
                 </div>
