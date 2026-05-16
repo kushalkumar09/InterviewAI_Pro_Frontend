@@ -1,72 +1,72 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import { 
-  Award, 
-  Download, 
-  Share2, 
-  Target, 
-  Brain, 
-  ChevronLeft // 2. Import ChevronLeft for the back icon
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Award,
+  Download,
+  ChevronLeft
 } from 'lucide-react';
+import { api } from '../../config/api/api';
 import ReportSummary from './components/ReportSummary';
 import Transcript from './components/Transcript';
 import GrowthRoadmap from './components/GrowthRoadmap';
 
+const fallbackReport = {
+  overallScore: 0,
+  recommendation: 'Pending',
+  role: 'Interview Report',
+  createdAt: null,
+  pillars: [],
+  feedback: {
+    strengths: [],
+    improvements: [],
+  },
+  roadmap: [],
+  transcript: [],
+};
+
+const formatDate = (date) => {
+  if (!date) return 'Not available';
+  return new Intl.DateTimeFormat('en', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date));
+};
+
 const InterviewReport = () => {
   const [activeTab, setActiveTab] = useState('summary');
-  const navigate = useNavigate(); // 3. Initialize navigate
+  const [reportData, setReportData] = useState(fallbackReport);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  const reportData = {
-    overallScore: 84,
-    recommendation: "Strong Hire",
-    role: "Senior Software Engineer",
-    date: "March 22, 2026",
-    // ... rest of your data object
-    pillars: [
-      { name: 'Technical Depth', score: 90, color: 'bg-emerald-500' },
-      { name: 'System Design', score: 75, color: 'bg-blue-500' },
-      { name: 'Communication', score: 88, color: 'bg-purple-500' },
-      { name: 'Problem Solving', score: 82, color: 'bg-amber-500' },
-    ],
-    feedback: {
-    strengths: [
-      "Excellent mastery of React concurrent features and hooks.",
-      "Clear articulation of system scalability trade-offs.",
-      "Strong debugging mindset when faced with edge cases."
-    ],
-    improvements: [
-      "Improve depth when discussing NoSQL vs SQL consistency models.",
-      "Could be more concise in behavioral answers (use STAR method).",
-      "Explain the 'why' behind choosing specific design patterns more clearly."
-    ]
-  },
-    roadmap: [
-      {
-        area: "Distributed Caching",
-        priority: "High",
-        reason: "You struggled to explain cache invalidation strategies during the System Design section.",
-        resources: [
-          { title: "Cache Systems Explained", channel: "ByteByteGo", duration: "5m", url: "https://www.youtube.com/watch?v=dGAgxozNWFE", thumb: "https://img.youtube.com/vi/dGAgxozNWFE/mqdefault.jpg" },
-          { title: "Distributed Caching Strategies", channel: "ByteMonk", duration: "7m", url: "https://www.youtube.com/watch?v=Gdfj-544AkA", thumb: "https://img.youtube.com/vi/Gdfj-544AkA/mqdefault.jpg" }
-        ],
-        exercises: ["Draw a Write-Back vs Write-Through diagram", "Compare Redis vs Memcached"]
-      }
-    ],
-    transcript: [
-      { role: 'ai', text: "How would you handle global state in a large-scale React application?" },
-      { role: 'user', text: "I'd use a combination of Context for small things and Redux Toolkit or Zustand for complex global state to avoid prop drilling." },
-    ]
-  };
+  useEffect(() => {
+    let isMounted = true;
+
+    api.get(`/reports/${id}`)
+      .then(({ data }) => {
+        if (!isMounted) return;
+        setReportData({ ...fallbackReport, ...data.report });
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setError(err.response?.data?.message || 'Unable to load report');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-6xl mx-auto overflow-hidden">
-      
-      {/* 1. TOP NAVIGATION & HEADER */}
       <div className="flex flex-col gap-4 mb-6 shrink-0 px-2">
-        
-        {/* Back Button */}
-        <button 
-          onClick={() => navigate('/reports')} // 4. Add the back navigation logic
+        <button
+          onClick={() => navigate('/reports')}
           className="flex items-center gap-2 text-slate-400 hover:text-purple-600 transition-colors w-fit group"
         >
           <div className="p-1 bg-white border border-slate-100 rounded-lg group-hover:border-purple-200 shadow-sm transition-all">
@@ -81,24 +81,23 @@ const InterviewReport = () => {
               <Award size={14} /> Performance Analysis
             </div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">{reportData.role}</h1>
-            <p className="text-slate-400 text-xs font-medium">{reportData.date} • Session #9921</p>
+            <p className="text-slate-400 text-xs font-medium">
+              {isLoading ? 'Loading report...' : `${formatDate(reportData.createdAt)} - Session #${String(reportData._id || id).slice(-4)}`}
+            </p>
           </div>
-          
+
           <div className="flex gap-3">
             <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-purple-600 transition-all shadow-sm">
               <Download size={18} />
             </button>
-            <button className="bg-[#0f172a] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-600 transition-all shadow-lg active:scale-95">
+            <button onClick={() => navigate('/create-interview')} className="bg-[#0f172a] text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-600 transition-all shadow-lg active:scale-95">
               Retake Mock
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. Main Card Container */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col flex-1 overflow-hidden mb-4">
-        
-        {/* Navigation Tabs */}
         <div className="flex border-b border-slate-100 px-10 pt-4 gap-10 shrink-0">
           {['summary', 'transcript', 'roadmap'].map((tab) => (
             <button
@@ -116,11 +115,22 @@ const InterviewReport = () => {
           ))}
         </div>
 
-        {/* Dynamic Component Area */}
         <div className="flex-1 overflow-y-auto p-10 bg-white">
-          {activeTab === 'summary' && <ReportSummary data={reportData} />}
-          {activeTab === 'transcript' && <Transcript transcript={reportData.transcript} />}
-          {activeTab === 'roadmap' && <GrowthRoadmap roadmap={reportData.roadmap} />}
+          {error && (
+            <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5 text-sm font-bold text-rose-600">
+              {error}
+            </div>
+          )}
+
+          {!error && isLoading && (
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-sm font-bold text-slate-500">
+              Loading report...
+            </div>
+          )}
+
+          {!error && !isLoading && activeTab === 'summary' && <ReportSummary data={reportData} />}
+          {!error && !isLoading && activeTab === 'transcript' && <Transcript transcript={reportData.transcript} />}
+          {!error && !isLoading && activeTab === 'roadmap' && <GrowthRoadmap roadmap={reportData.roadmap} />}
         </div>
       </div>
     </div>
