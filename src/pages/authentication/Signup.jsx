@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Rocket, User, Mail, Lock } from 'lucide-react';
+import { api } from '../../config/api/api';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    localStorage.setItem('token', 'true');
-    navigate('/');
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const { data } = await api.post('/auth/signup', { fullName, email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to create account');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,18 +41,19 @@ const Signup = () => {
         <form onSubmit={handleSignup} className="space-y-4">
           <div className="relative">
             <User className="absolute left-4 top-3.5 text-slate-400" size={20} />
-            <input type="text" placeholder="Full Name" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
+            <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
           </div>
           <div className="relative">
             <Mail className="absolute left-4 top-3.5 text-slate-400" size={20} />
-            <input type="email" placeholder="Email Address" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
+            <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
           </div>
           <div className="relative">
             <Lock className="absolute left-4 top-3.5 text-slate-400" size={20} />
-            <input type="password" placeholder="Create Password" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
+            <input type="password" placeholder="Create Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none ring-purple-100" required />
           </div>
-          <button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 hover:scale-[1.02] transition-transform uppercase tracking-wide text-sm mt-2">
-            Get Started
+          {error && <p className="text-sm font-bold text-rose-500 text-center">{error}</p>}
+          <button disabled={isSubmitting} className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 hover:scale-[1.02] transition-transform uppercase tracking-wide text-sm mt-2 disabled:opacity-60">
+            {isSubmitting ? 'Creating...' : 'Get Started'}
           </button>
         </form>
 

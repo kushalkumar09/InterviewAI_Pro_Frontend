@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Rocket, Mail, Lock } from 'lucide-react';
+import { api } from '../../config/api/api';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Mock Login: Save a token and redirect
-    localStorage.setItem('token', 'true');
-    navigate('/');
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const { data } = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to sign in');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -30,6 +43,8 @@ const Login = () => {
             <input 
               type="email" 
               placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:ring-2 ring-purple-100 transition-all"
               required
             />
@@ -39,12 +54,15 @@ const Login = () => {
             <input 
               type="password" 
               placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:ring-2 ring-purple-100 transition-all"
               required
             />
           </div>
-          <button className="w-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-100 hover:scale-[1.02] transition-transform uppercase tracking-wide text-sm">
-            Sign In
+          {error && <p className="text-sm font-bold text-rose-500 text-center">{error}</p>}
+          <button disabled={isSubmitting} className="w-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-100 hover:scale-[1.02] transition-transform uppercase tracking-wide text-sm disabled:opacity-60">
+            {isSubmitting ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
