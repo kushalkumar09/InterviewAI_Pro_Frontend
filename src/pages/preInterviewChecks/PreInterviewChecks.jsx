@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Video, Mic, Wifi, VideoOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../config/api/api';
 
 // Components Imports
 import { ControlSidebar } from './components/ControlSidebar';
@@ -17,6 +18,8 @@ const PreInterviewChecks = () => {
   const [latency, setLatency] = useState(null);
   const [isCheckingNetwork, setIsCheckingNetwork] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeInterview, setActiveInterview] = useState(null);
+  const [isStarting, setIsStarting] = useState(false);
   
   // Modal States
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
@@ -30,6 +33,26 @@ const PreInterviewChecks = () => {
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const activeInterviewId = localStorage.getItem('activeInterviewId');
+    if (!activeInterviewId) return;
+
+    let isMounted = true;
+    api.get('/interviews')
+      .then(({ data }) => {
+        if (!isMounted) return;
+        const interview = (data.interviews || []).find((item) => item._id === activeInterviewId);
+        setActiveInterview(interview || null);
+      })
+      .catch(() => {
+        if (isMounted) setActiveInterview(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --- CAMERA LOGIC ---
   const toggleCamera = async () => {
@@ -186,8 +209,24 @@ const PreInterviewChecks = () => {
     }
   };
 
-  const handleStartInterview = () => {
-    navigate('/'); 
+  const handleStartInterview = async () => {
+    const activeInterviewId = localStorage.getItem('activeInterviewId');
+    if (!activeInterviewId) {
+      navigate('/create-interview');
+      return;
+    }
+
+    setErrorMsg('');
+    setIsStarting(true);
+    try {
+      const { data } = await api.post(`/interviews/${activeInterviewId}/complete`);
+      localStorage.removeItem('activeInterviewId');
+      navigate(`/reports/${data.report._id}`);
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Unable to start interview session.');
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   return (
@@ -294,13 +333,13 @@ const PreInterviewChecks = () => {
           </div>
           
           <div className="mt-6 flex items-center justify-center gap-8 shrink-0">
-            <button onClick={handleStartInterview} className="text-[15px] font-bold text-slate-600 hover:text-slate-900 transition-colors">Skip checks and Start Interview</button>
+            <button onClick={handleStartInterview} disabled={isStarting} className="text-[15px] font-bold text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-60">Skip checks and Start Interview</button>
             <button 
               onClick={handleStartInterview} 
-              disabled={!cameraEnabled || !micEnabled}
-              className={`px-10 py-4 font-bold rounded-xl transition-all active:scale-95 text-[15px] shadow-lg ${(!cameraEnabled || !micEnabled) ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20'}`}
+              disabled={!cameraEnabled || !micEnabled || isStarting}
+              className={`px-10 py-4 font-bold rounded-xl transition-all active:scale-95 text-[15px] shadow-lg ${(!cameraEnabled || !micEnabled || isStarting) ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20'}`}
             >
-              Start Interview
+              {isStarting ? 'Generating Report...' : 'Start Interview'}
             </button>
           </div>
         </main>
@@ -318,6 +357,7 @@ const PreInterviewChecks = () => {
       <SessionOverviewModal 
         isOpen={isOverviewOpen} 
         onClose={() => setIsOverviewOpen(false)}
+        interview={activeInterview}
       />
     </div>
   );

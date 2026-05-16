@@ -1,16 +1,17 @@
 import React from 'react';
 import { Briefcase, User, Clock, Target, CheckCircle2, X } from 'lucide-react';
 
-export const SessionOverviewModal = ({ isOpen, onClose }) => {
+export const SessionOverviewModal = ({ isOpen, onClose, interview }) => {
   if (!isOpen) return null;
 
   const sessionData = {
-    role: "Senior Frontend Developer",
-    company: "InterviewAI Pro",
-    interviewer: "AI Assistant (Advanced Model)",
-    duration: "45 Minutes",
-    complexity: "High",
-    topics: ["React Architecture", "State Management", "System Design", "Behavioral Analysis"]
+    role: interview?.role || 'Interview Session',
+    interviewer: 'AI Assistant',
+    duration: '45 Minutes',
+    complexity: interview?.difficulty || 'Mid-Level',
+    topics: interview?.focusAreas?.length
+      ? interview.focusAreas
+      : ['Technical', 'Behavioral']
   };
 
   return (
