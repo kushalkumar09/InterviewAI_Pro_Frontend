@@ -13,6 +13,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../../config/api/api';
 
 const InterviewSetup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -24,6 +25,8 @@ const InterviewSetup = () => {
     focusAreas: ['Technical', 'Behavioral'],
     aiInstructions: ''
   });
+  const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -38,8 +41,21 @@ const InterviewSetup = () => {
   };
   const navigateTo = useNavigate();
 
-  const navigateToInterviewChecks = () => {
-    navigateTo('/interview-checks');
+  const navigateToInterviewChecks = async () => {
+    setError('');
+    setIsSaving(true);
+    try {
+      const { data } = await api.post('/interviews', {
+        ...formData,
+        resumeName: formData.resume?.name || '',
+      });
+      localStorage.setItem('activeInterviewId', data.interview._id);
+      navigateTo('/interview-checks');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to create interview');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const steps = [
@@ -55,13 +71,14 @@ const InterviewSetup = () => {
     <div className="flex-1 flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto w-full text-center">
       <h2 className="text-3xl font-bold text-slate-900">Your Background</h2>
       <p className="text-slate-500">Upload your resume for a personalized AI experience.</p>
-      <div className="w-full border-2 border-dashed border-slate-100 rounded-[2.5rem] p-12 bg-slate-50/50 hover:bg-white hover:border-purple-300 transition-all cursor-pointer group mt-4">
+      <label className="w-full border-2 border-dashed border-slate-100 rounded-[2.5rem] p-12 bg-slate-50/50 hover:bg-white hover:border-purple-300 transition-all cursor-pointer group mt-4">
+        <input className="hidden" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFormData({ ...formData, resume: e.target.files?.[0] || null })} />
         <div className="bg-white w-12 h-12 rounded-xl shadow-sm flex items-center justify-center mx-auto mb-4 text-purple-600 group-hover:scale-110 transition-transform">
           <Upload size={24} />
         </div>
-        <p className="font-bold text-slate-700">Drop your resume here</p>
+        <p className="font-bold text-slate-700">{formData.resume?.name || 'Drop your resume here'}</p>
         <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">PDF or DOCX (Optional)</p>
-      </div>
+      </label>
     </div>
   );
 
@@ -151,8 +168,9 @@ const InterviewSetup = () => {
         <p className="flex items-center justify-center gap-2 text-sm"><Brain size={16} /> Difficulty: <span className="font-bold text-slate-800">{formData.difficulty}</span></p>
       </div>
       <div className="flex flex-col gap-3 max-w-xs mx-auto pt-4 w-full">
-        <button className="bg-[#0f172a] text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-purple-600 transition-all active:scale-95 uppercase tracking-widest text-[10px]" onClick={navigateToInterviewChecks}>
-          Start AI Session
+        {error && <p className="text-sm font-bold text-rose-500">{error}</p>}
+        <button disabled={isSaving} className="bg-[#0f172a] text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-purple-600 transition-all active:scale-95 uppercase tracking-widest text-[10px] disabled:opacity-60" onClick={navigateToInterviewChecks}>
+          {isSaving ? 'Saving...' : 'Start AI Session'}
         </button>
         <button className="text-slate-400 text-[10px] font-bold hover:text-slate-600 uppercase tracking-widest py-2">
           Save for Later
