@@ -28,7 +28,12 @@ const InterviewCard = ({ role, company, date, daysLeft, priority }) => (
     </div>
 );
 
-const UpcomingInterviews = () => {
+const UpcomingInterviews = ({ interviews = [] }) => {
+    const fallback = [
+        { _id: 'empty', role: 'Create your first interview', company: 'InterviewAI', date: 'Ready when you are', priority: true },
+    ];
+    const list = interviews.length ? interviews : fallback;
+
     return (
         <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
@@ -37,18 +42,16 @@ const UpcomingInterviews = () => {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <InterviewCard 
-                    role="Senior Frontend Developer" 
-                    company="Google" 
-                    date="Oct 24, 2024" 
-                    priority
-                />
-                 <InterviewCard 
-                    role="Product Manager" 
-                    company="Notion" 
-                    date="Oct 26, 2024" 
-                    daysLeft={2}
-                />
+                {list.map((item, index) => (
+                    <InterviewCard
+                        key={item._id}
+                        role={item.role}
+                        company={item.company || item.difficulty || 'AI'}
+                        date={item.scheduledFor ? new Date(item.scheduledFor).toLocaleDateString() : (item.date || new Date(item.createdAt || Date.now()).toLocaleDateString())}
+                        priority={index === 0}
+                        daysLeft={index === 0 ? null : 2}
+                    />
+                ))}
             </div>
         </div>
     );

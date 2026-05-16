@@ -32,7 +32,8 @@ const SkillRadar = () => {
   );
 };
 
-const PerformanceAnalysis = () => {
+const PerformanceAnalysis = ({ stats }) => {
+    const topText = stats?.averageScore ? `${stats.averageScore}% average score` : "Complete a session to unlock trends";
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
             <div className="flex justify-between items-center mb-4">
@@ -40,7 +41,7 @@ const PerformanceAnalysis = () => {
             </div>
             
             <p className="text-sm text-gray-500 mb-6">
-                 You're in the <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">top 5%</span> of candidates this week!
+                 <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">{topText}</span>
             </p>
 
             <div className="flex flex-col items-center">

@@ -1,16 +1,17 @@
 import React from 'react';
 import { Sparkles, Zap } from 'lucide-react';
 
-const WelcomeHeader = () => {
+const WelcomeHeader = ({ user }) => {
+    const name = user?.firstName || 'there';
     return (
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-[2rem] p-10 text-white relative overflow-hidden shadow-xl mb-8">
             <div className="relative z-10 max-w-2xl">
                 <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-4xl font-bold">Welcome back, Kushal!</h1>
+                    <h1 className="text-4xl font-bold">Welcome back, {name}!</h1>
                     <span className="text-4xl">🚀</span>
                 </div>
                 <p className="text-purple-100 text-lg mb-8 font-light">
-                    Ready to crush your next interview at Your dream company?
+                    Ready to crush your next {user?.targetRole || 'interview'} interview?
                 </p>
 
                 <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl mb-8 border border-white/20">

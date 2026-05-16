@@ -14,32 +14,32 @@ const StatsCard = ({ icon, label, value, subtext, color }) => (
     </div>
 );
 
-const StatsGrid = () => {
+const StatsGrid = ({ stats }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatsCard 
                 icon={<Flame size={24} className="text-orange-500" />} 
                 label="Daily Streak" 
-                value="5 Days!" 
+                value={`${stats?.streak ?? 0} Days!`} 
                 color="bg-orange-500"
             />
              <StatsCard 
                 icon={<Trophy size={24} className="text-purple-500" />} 
                 label="Level" 
-                value="Level 12" 
-                subtext="240 XP to next"
+                value={`Level ${stats?.level ?? 1}`} 
+                subtext={`${Math.max((stats?.nextLevelXP ?? 1000) - (stats?.currentXP ?? 0), 0)} XP to next`}
                 color="bg-purple-500"
             />
              <StatsCard 
                 icon={<CheckCircle size={24} className="text-green-500" />} 
                 label="Interviews Done" 
-                value="24 Sessions" 
+                value={`${stats?.interviewsCompleted ?? 0} Sessions`} 
                 color="bg-green-500"
             />
              <StatsCard 
                 icon={<Star size={24} className="text-blue-500" />} 
                 label="Badges" 
-                value="8 Unlocked" 
+                value={`${stats?.badgesUnlocked ?? 0} Unlocked`} 
                 color="bg-blue-500"
             />
         </div>
